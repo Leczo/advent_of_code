@@ -16,7 +16,7 @@ def computing(data):
 
 
 def main():
-    with open(os.path.dirname(os.path.realpath(__file__))+'\input_2.txt') as file:
+    with open(os.path.dirname(os.path.realpath(__file__))+os.path.sep+'input_2.txt') as file:
         dt = list(map(int, file.read().split(',')))
 
         products = list(itertools.product(

@@ -10,7 +10,7 @@ def fuel_count(mass, counter=0):
 
 def main():
 
-    with open(os.path.dirname(os.path.realpath(__file__))+'\input_1.txt') as file:
+    with open(os.path.dirname(os.path.realpath(__file__))+os.path.sep+'input_1.txt') as file:
         data = file.readlines()
         counted_fuel = sum(fuel_count(int(i)) for i in data)
         print(counted_fuel)

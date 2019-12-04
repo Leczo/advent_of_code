@@ -46,7 +46,7 @@ def step_sort(steps):
 
 
 def main():
-    with open(os.path.dirname(os.path.realpath(__file__))+'\input_3.txt') as file:
+    with open(os.path.dirname(os.path.realpath(__file__))+os.path.sep+'input_3.txt') as file:
         dt = file.readlines()
         first_wire = wire_parser(dt[0])
         second_wire = wire_parser(dt[1])

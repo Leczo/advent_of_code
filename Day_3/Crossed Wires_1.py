@@ -33,7 +33,7 @@ def coords_computing(wire):
 
 
 def main():
-    with open(os.path.dirname(os.path.realpath(__file__))+'\input_3.txt') as file:
+    with open(os.path.dirname(os.path.realpath(__file__))+os.path.sep+'input_3.txt') as file:
         dt = file.readlines()
         f_wire = wire_parser(dt[0])
         s_wire = wire_parser(dt[1])
