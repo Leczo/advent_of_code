@@ -12,6 +12,10 @@ def computing(data):
         if data[i] == 2:
             data[data[i+3]] = data[data[i+1]] * data[data[i+2]]
             continue
+        if data[i] == 3:
+            continue
+        if data[i] == 4:
+
     return data
 
 
