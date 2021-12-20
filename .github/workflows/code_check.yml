@@ -1,0 +1,16 @@
+name: learn-github-actions
+on: [push]
+jobs:
+  check-code-execution:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-python@v2
+        - uses: actions/setup-go@v2
+    with:
+        stable: 'true'
+    - run: go version
+    - run: python --version
+
+
+
