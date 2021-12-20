@@ -7,10 +7,17 @@ jobs:
         - uses: actions/checkout@v2
         - uses: actions/setup-python@v2
         - uses: actions/setup-go@v2
-    with:
-        stable: 'true'
-    - run: go version
-    - run: python --version
+          with:
+            stable: 'true'
 
+        - name: check golang 
+          run: go version
+        
+        - name: check python  version
+          run: python --version
 
+        - name: Run python scripts
+          run: ls adventofcode_20{19,20}/Day*/*.py | xargs -I {} python3 {}
 
+        - name: Run golang scripts
+          run: ls adventofcode_20{19,20}/Day*/*.py | xargs -I {} go run {}
