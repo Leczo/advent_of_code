@@ -18,21 +18,6 @@ func load_input(input string) []string {
 	f, err := os.Open(input)
 	check(err)
 
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	f_content := []string{}
-
-	for scanner.Scan() {
-		f_content = append(f_content, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-
-	}
-	return f_content
-
 }
 
 func get_rating_value(priority string, data_map []string) string {
