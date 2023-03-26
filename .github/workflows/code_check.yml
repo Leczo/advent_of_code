@@ -1,4 +1,4 @@
-name: learn-github-actions
+name: AOC check
 on: [push]
 jobs:
   check-code-execution:
@@ -17,7 +17,8 @@ jobs:
           run: python --version
 
         - name: Run python scripts
-          run: ls adventofcode_20{19,20}/Day*/*.py | xargs -I {} python3 {}
+          run: ls adventofcode_20{19,20}_py/Day*/*.py | xargs -I {} python3 {}
 
         - name: Run golang scripts
-          run: ls adventofcode_20{19,20}/Day*/*.py | xargs -I {} go run {}
+          run: ls adventofcode_2021_go/Day*/*.go | xargs -I {} go run {}
+

@@ -16,18 +16,18 @@ pub fn run() {
 
     for record in data {
         if !record.is_empty() {
-            num = match record.parse::<i64>() {
-                Ok(n) => n,
-                Err(_) => continue,
-            };
+            num = record.parse::<i64>().unwrap();
             group.push(num);
         } else {
             groups.push(group.clone());
             group.clear()
         }
     }
-
-    let calories: Vec<i64> = groups.iter().map(|item| item.iter().sum()).collect();
-
-    println!("{:?}", calories.iter().max().unwrap());
+    let mut calories: Vec<i64> = vec![]; 
+    for item in groups {
+        calories.push(item.into_iter().sum());
+    }
+    calories.sort();
+    let top_three = calories[calories.len()-3..].into_iter().sum::<i64>();
+    println!("{:?}", top_three);
 }
