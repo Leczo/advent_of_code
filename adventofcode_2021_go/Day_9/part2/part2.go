@@ -10,142 +10,165 @@ import (
 	"strings"
 )
 
+type Point struct {
+	rowIdx int
+	colIdx int
+}
+
+type LowerPoint struct {
+	rowIdx      int
+	colIdx      int
+	basinPoints map[Point]int
+	basinSize   int
+}
+
 func errCheck(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-type Signal struct {
-	leftSide  []map[string]struct{}
-	rightSide []map[string]struct{}
-}
-
-func loadInput(path string) []Signal {
+func loadInput(path string) [][]int {
 	f, err := os.Open(path)
 	errCheck(err)
 
 	defer f.Close()
+
 	scanner := bufio.NewScanner(f)
-	outputVals := []Signal{}
+	board := [][]int{}
+	row := []int{}
 
 	for scanner.Scan() {
-		signals := strings.Split(scanner.Text(), "|")
-		rightSide := signals[1]
-		leftSide := signals[0]
-		signal := Signal{}
-		for _, value := range strings.Split(rightSide, " ") {
-			if value != " " && value != "  " && value != "" {
-				charsMap := toMap(strings.Split(value, ""))
-				signal.rightSide = append(signal.rightSide, charsMap)
 
-			}
-		}
-		for _, value := range strings.Split(leftSide, " ") {
-			if value != " " && value != "  " && value != "" {
-				charsMap := toMap(strings.Split(value, ""))
-				signal.leftSide = append(signal.leftSide, charsMap)
-			}
-		}
-		outputVals = append(outputVals, signal)
-
-		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
-		}
+		row, _ = sliceToInts(strings.Split(scanner.Text(), ""))
+		board = append(board, row)
 	}
-	return outputVals
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+
+	}
+	return board
 }
 
-func toMap(s []string) map[string]struct{} {
-	// Just storing keys so skipping values with struct
-	m := map[string]struct{}{}
-	for _, char := range s {
-		m[char] = struct{}{}
+func sliceToInts(s []string) ([]int, error) {
+	result := make([]int, len(s))
+	for i, str := range s {
+		val, err := strconv.Atoi(str)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = val
 	}
-	return m
+	return result, nil
 }
 
-func extractNumberParts(s []map[string]struct{}) []map[string]struct{} {
-	sort.Slice(s, func(i, j int) bool {
-		return len(s[i]) < len(s[j])
+func findLowPoints(data [][]int) []LowerPoint {
+	lowPoints := []LowerPoint{}
+	numRows := len(data)
+	numCols := len(data[0])
+
+	for i := 0; i < numRows; i++ {
+		for j := 0; j < numCols; j++ {
+			if isLowPoint(data, i, j) {
+				lowPoints = append(lowPoints, LowerPoint{
+					rowIdx:      i,
+					colIdx:      j,
+					basinPoints: make(map[Point]int),
+				})
+			}
+		}
+	}
+
+	return lowPoints
+}
+
+func isLowPoint(data [][]int, i, j int) bool {
+	val := data[i][j]
+	if i > 0 && data[i-1][j] < val { // check top
+		return false
+	}
+	if i < len(data)-1 && data[i+1][j] < val { // check bottom
+		return false
+	}
+	if j > 0 && data[i][j-1] < val { // check left
+		return false
+	}
+	if j < len(data[i])-1 && data[i][j+1] < val { // check right
+		return false
+	}
+	return true
+}
+
+func searchBasinPoints(data *[][]int, lowerPoint *LowerPoint, pointer *Point) {
+	// Stop rescursion rules
+	switch {
+	case pointer.rowIdx > len(*data)-1:
+		return
+	case pointer.rowIdx < 0:
+		return
+	case pointer.colIdx > len((*data)[0])-1:
+		return
+	case pointer.colIdx < 0:
+		return
+	case (*data)[pointer.rowIdx][pointer.colIdx] == 9:
+		return
+	}
+
+	if _, isPointAlreadyInMap := lowerPoint.basinPoints[*pointer]; isPointAlreadyInMap {
+		return
+	}
+
+	// Add basin point to map
+	value := (*data)[pointer.rowIdx][pointer.colIdx]
+	lowerPoint.basinPoints[*pointer] = value
+
+	// Create a list of neighboring cells
+	neighbors := []Point{
+		{colIdx: pointer.colIdx, rowIdx: pointer.rowIdx + 1}, // top
+		{colIdx: pointer.colIdx, rowIdx: pointer.rowIdx - 1}, // bottom
+		{colIdx: pointer.colIdx - 1, rowIdx: pointer.rowIdx}, // left
+		{colIdx: pointer.colIdx + 1, rowIdx: pointer.rowIdx}, // right
+	}
+
+	for _, neighbor := range neighbors {
+		searchBasinPoints(data, lowerPoint, &neighbor)
+	}
+}
+
+func findBasinNeighbours(data [][]int, lPoints []LowerPoint) []LowerPoint {
+
+	pointer := Point{}
+	lPointsWithBasins := []LowerPoint{}
+
+	for _, lpoint := range lPoints {
+
+		pointer.colIdx = lpoint.colIdx
+		pointer.rowIdx = lpoint.rowIdx
+
+		searchBasinPoints(&data, &lpoint, &pointer)
+
+		lpoint.basinSize = len(lpoint.basinPoints)
+		lPointsWithBasins = append(lPointsWithBasins, lpoint)
+
+	}
+	return lPointsWithBasins
+}
+
+func largestBasinsTotalSize(lowerPoints []LowerPoint) {
+	sort.Slice(lowerPoints, func(i, j int) bool {
+		return lowerPoints[i].basinSize > lowerPoints[j].basinSize
 	})
-	one := s[0]
-	seven := s[1]
-	four := s[2]
-	eight := s[len(s)-1]
 
-	three := map[string]struct{}{}
-	nine := map[string]struct{}{}
-	six := map[string]struct{}{}
-	zero := map[string]struct{}{}
-	five := map[string]struct{}{}
-	two := map[string]struct{}{}
-
-	fiveParts := []map[string]struct{}{s[3], s[4], s[5]}
-	for _, number := range fiveParts {
-		if ok, _ := isContained(seven, number); ok {
-			three = number
-		} else if _, occurence := isContained(four, number); occurence == 3 {
-			five = number
-		} else {
-			two = number
-		}
-	}
-
-	sixParts := []map[string]struct{}{s[6], s[7], s[8]}
-	for _, number := range sixParts {
-
-		if ok, _ := isContained(three, number); ok {
-			nine = number
-		} else if ok, _ := isContained(one, number); !ok {
-			six = number
-		} else {
-			zero = number
-		}
-	}
-	return []map[string]struct{}{zero, one, two, three, four, five, six, seven, eight, nine}
-}
-
-func isContained(s1, s2 map[string]struct{}) (bool, int) {
-	c := true
-	occurences := 0
-	for char := range s1 {
-		_, ok := s2[char]
-		if !ok {
-			c = false
-		} else {
-			occurences += 1
-		}
-	}
-	return c, occurences
-}
-
-func computeSignal(pattern, cipher []map[string]struct{}) int {
-	totalBuilder := ""
-	for _, encodedDigit := range cipher {
-		// pattern is ordered ascending from 0 to 9
-		for number, decodedDigit := range pattern {
-			if ok, occurences := isContained(decodedDigit, encodedDigit); ok && occurences == len(encodedDigit) {
-				totalBuilder += fmt.Sprintf("%v", number)
-				break
-			}
-		}
-	}
-	total, err := strconv.Atoi(totalBuilder)
-	if err != nil {
-		return 0
-	}
-	log.Println(total)
-	return total
+	total := lowerPoints[0].basinSize * lowerPoints[1].basinSize * lowerPoints[2].basinSize
+	fmt.Println("Total: ", total)
 }
 
 func Run() {
 	data := loadInput("./input")
-	var sum int
-	for _, signal := range data {
-		decodedNums := extractNumberParts(signal.leftSide)
-		output := computeSignal(decodedNums, signal.rightSide)
-		sum += output
-	}
-	log.Println(sum)
+
+	lowPoints := findLowPoints(data)
+	lowPointsWithBasins := findBasinNeighbours(data, lowPoints)
+	largestBasinsTotalSize(lowPointsWithBasins)
+
 }
